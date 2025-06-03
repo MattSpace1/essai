@@ -1,0 +1,30 @@
+name: Build iOS App
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest
+
+    - name: Build .ipa
+      run: |
+        xcodebuild -create-xcframework -scheme HelloSwiftApp -sdk iphoneos -configuration Release
+        xcodebuild -scheme HelloSwiftApp -sdk iphoneos -configuration Release -destination generic/platform=iOS build
+        mkdir -p build/ipa
+        xcodebuild -exportArchive -archivePath ~/Library/Developer/Xcode/DerivedData/HelloSwiftApp*/Build/Intermediates.noindex/ArchiveIntermediates/HelloSwiftApp/BuildProductsPath/Release-iphoneos/HelloSwiftApp.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath build/ipa
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: HelloSwiftApp-ipa
+        path: build/ipa/*.ipa
